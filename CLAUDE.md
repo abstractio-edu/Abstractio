@@ -22,11 +22,13 @@ App educacional gamificado para ensinar **Programação Orientada a Objetos (POO
 
 - **Build:** Vite + React 19 + TypeScript
 - **Roteamento:** React Router v7
-- **Estado:** React Context + localStorage (sem sync com backend)
+- **Estado:** React Context (`AuthContext`, `SessionContext`, `TrilhaContext`, `ProgressContext`) alimentado pela API
 - **Estilos:** Tailwind CSS com paleta customizada
 - **Ícones:** Heroicons
 - **Markdown:** react-markdown (para renderizar teoria das missões)
-- **Backend:** Nenhum — app 100% client-side
+- **Login:** Firebase Auth (e-mail/senha + Google) — `src/lib/firebase.ts`; o token vai como `Bearer` para a API
+- **Backend:** `tentacle` (Node + Express + PostgreSQL, rota `/api/v1`) — cliente em `src/lib/api.ts`. Cuida de usuários, progresso, conchas, inventário e conteúdo das missões
+- **Variáveis de ambiente:** `VITE_API_BASE_URL` + 4 do Firebase (ver `.env.example`)
 
 ## Estrutura de Pastas
 
@@ -73,6 +75,9 @@ src/
 | `/trilha` | `Trilha.tsx` | Mapa de níveis e missões |
 | `/missao/:nivelIdx/:missaoIdx` | `Missao.tsx` | Conteúdo da missão |
 | `/conquistas` | `Conquistas.tsx` | Estante de troféus |
+| `/exercicios` | `ExerciciosPage.tsx` | Exercícios |
+| `/perfil` | `Perfil.tsx` | Perfil do usuário |
+| `/login`, `/cadastro`, `/completar-cadastro` | `Login.tsx` etc. | Públicas (fora do `RequireAuth`) |
 
 Não existe rota `/trilhas` — há apenas uma trilha (POO) por enquanto.
 
@@ -98,15 +103,20 @@ Usar esses termos em variáveis, componentes, rotas e comentários. Nunca usar "
 
 ## Estado Global (ProgressContext)
 
-Persistido em **localStorage**. Sem sync com backend.
+Vem da API (`GET` do progresso da trilha) — não fica em localStorage. Campos principais:
 
 ```typescript
 {
-  completed: string[],         // IDs das missões concluídas ex: ["1-1", "1-2"]
-  niveis_concluidos: number[], // IDs dos níveis 100% completos (1-based)
-  pontuacao: number,           // +15 por missão concluída
+  completed: string[],                      // slugs das missões concluídas
+  niveis_concluidos: number[],              // levelIds 100% completos
+  progressoGeral: number,                   // percentual, direto da API
+  conchas_por_missao: Record<string, number>, // slug -> conchas ganhas
+  extras_done_count: Record<string, number>,  // slug -> extras acertados (define o tier bronze/prata/ouro)
+  // ... ver ProgressContext.tsx
 }
 ```
+
+Saldo de conchas, perfil e avatar ativo ficam no `SessionContext`.
 
 **Nível do usuário** — derivado de `niveis_concluidos.length`, nunca de um campo separado. Títulos em `ESTRUTURA.md`.
 
@@ -361,6 +371,8 @@ Quando uma mudança no projeto tornar o `ESTRUTURA.md` desatualizado, avisar o q
 
 ## Deploy
 
-App client-side puro. Build: `npm run build` → pasta `dist/`
+Build: `npm run build` → pasta `dist/`. Precisa das variáveis de ambiente `VITE_*` no painel da hospedagem.
 
-Pode ser deployado em Vercel ou Netlify sem configuração extra.
+Domínio: **abstractio.com.br** (Rebecca + Gabriel). Hoje na Vercel Hobby do Gabriel; proposta de migrar para o Cloudflare Pages (aceita repo de org no plano grátis). `vercel.json` só faz o rewrite de SPA.
+
+Repositório: `github.com/abstractio-edu/Abstractio` (público).

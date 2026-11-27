@@ -23,7 +23,6 @@ src/assets/temporarios/
 # Docs e notas internas (não versionados no repo público)
 GUARDADOS.md
 docs/
-CLAUDE.md
 .claude/settings.local.json
 
 # Editor directories and files
